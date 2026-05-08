@@ -3,6 +3,8 @@
 #include <vector>
 #include <complex> 
 #include <cmath>
+#include <random>
+
 
 using samples = std::complex<float>;
 using std::cout;
@@ -53,5 +55,22 @@ public:
 
 
 int main(){
+    std::random_device rd;
+    std::mt19937 generator(rd());
+
+    size_t size = 10000;
+    std::uniform_real_distribution<float> distr (-100.0f, 100.0f);
+    std::vector<samples> input(size);
+    for(size_t i = 0; i < input.size(); ++i){
+        float real = distr(generator);
+        float imag = distr(generator);
+        input[i] = samples(real, imag);
+    }
+
+    for(size_t i = 0; i < 10; i++){
+        cout << input[i].real() << " " << input[i].imag() << endl;
+    }
+    
+    
     return 0;
 }
