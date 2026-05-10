@@ -15,18 +15,17 @@ using std::endl;
 class fastFourier {
 private:
     std::vector<samples> input;
-    std::vector<samples> out;
     
 
 public:
-    explicit fastFourier(std::vector<samples> input) : input(std::move(input)), out(std::vector<samples>(input.size(), samples(0.0f, 0.0f))){}
-
+    explicit fastFourier(std::vector<samples> data) : input(std::move(data)) {}
 
     std::vector<samples> dft(){
         if(input.empty()){
             cout << "Вектор пустой" << endl;
             return {};
         }
+        samplesBuff out(input.size());
 
         for(size_t k = 0; k < input.size(); ++k){
             for(size_t i = 0; i < input.size(); ++i){
@@ -57,6 +56,7 @@ public:
         else return {};
 
         size_t new_size = input.size() / radix;
+        samplesBuff out(input.size());
         std::vector<samplesBuff> sub(radix, samplesBuff(new_size, samples(0.0f, 0.0f)));
         for(size_t r = 0; r < radix; ++r){
             for(size_t i = 0; i < new_size; ++i){
@@ -84,9 +84,9 @@ public:
 private:
     bool is_smooth(size_t num_of_samples){
         if(num_of_samples == 0) return 0;
-        while(num_of_samples % 2 == 0) num_of_samples / 2;
-        while(num_of_samples % 3 == 0) num_of_samples / 3;
-        while(num_of_samples % 5 == 0) num_of_samples / 5;
+        while(num_of_samples % 2 == 0) num_of_samples /= 2;
+        while(num_of_samples % 3 == 0) num_of_samples /= 3;
+        while(num_of_samples % 5 == 0) num_of_samples /= 5;
         return num_of_samples == 1;
     }
 
@@ -124,7 +124,7 @@ private:
             );
 
             out[k] = input[0][k] + twiddleFactor1 * input[1][k] + twiddleFactor2 * input[2][k];
-            out[k + new_size] = input[0][k] + w * twiddleFactor1 * input[1][k] + w * w * twiddleFactor1 * input[2][k];
+            out[k + new_size] = input[0][k] + w * twiddleFactor1 * input[1][k] + w * w * twiddleFactor2 * input[2][k];
             out[k + 2 * new_size] = input[0][k] + w * w * twiddleFactor1 * input[1][k] + w * twiddleFactor2 * input[2][k];
         }
         return out;
@@ -165,20 +165,20 @@ private:
                 -std::sin(8 * M_PI * k / N)
             );
 
-            out[k] = input[0][k] + twiddleFactor1 * input[1][k] + twiddleFactor2 * input[2][k] * twiddleFactor3 * input[3][k] 
-            * twiddleFactor4 * input[4][k];
+            out[k] = input[0][k] + twiddleFactor1 * input[1][k] + twiddleFactor2 * input[2][k] + twiddleFactor3 * input[3][k] 
+            + twiddleFactor4 * input[4][k];
             
             out[k + new_size] = input[0][k] + w * twiddleFactor1 * input[1][k] + w_2 * twiddleFactor2 * input[2][k] + w_3 * twiddleFactor3 * input[3][k]
-            * w_4 * twiddleFactor4 * input[4][k];
+            + w_4 * twiddleFactor4 * input[4][k];
             
             out[k + 2 * new_size] = input[0][k] + w_2 * twiddleFactor1 * input[1][k] + w_4 * twiddleFactor2 * input[2][k] + w * twiddleFactor3 * input[3][k]
-            * w_3 * twiddleFactor4 * input[4][k];
+            + w_3 * twiddleFactor4 * input[4][k];
             
             out[k + 3 * new_size] = input[0][k] + w_3 * twiddleFactor1 * input[1][k] + w * twiddleFactor2 * input[2][k] + w_4 * twiddleFactor3 * input[3][k]
-            * w_2 * twiddleFactor4 * input[4][k]; 
+            + w_2 * twiddleFactor4 * input[4][k]; 
              
             out[k + 4 * new_size] = input[0][k] + w_4 * twiddleFactor1 * input[1][k] + w_3 * twiddleFactor2 * input[2][k] + w_2 * twiddleFactor3 * input[3][k]
-            * w * twiddleFactor4 * input[4][k];
+            + w * twiddleFactor4 * input[4][k];
         }
         return out;
     }
@@ -191,7 +191,7 @@ private:
 int main(){
     std::random_device rd;
     std::mt19937 generator(rd());
-    size_t size = 10000;
+    size_t size = 60;
     std::uniform_real_distribution<float> distr (-100.0f, 100.0f);
     std::vector<samples> input(size);
     for(size_t i = 0; i < input.size(); ++i){
@@ -204,6 +204,13 @@ int main(){
         cout << input[i].real() << " " << input[i].imag() << endl;
     }
     cout<<endl;
+    cout<<"Test"<<endl;
+
+    fastFourier ff(input);
+    auto result = ff.fft(input);
+    for(size_t i = 0; i < 15; ++i){
+        cout << result[i] << endl;
+    }
 
     
     return 0;
