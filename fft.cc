@@ -39,13 +39,11 @@ public:
 
     std::vector<samples> fft(const std::vector<samples>& input){
         if(input.empty()){
-            return {};
-            
+           throw std::invalid_argument("fft: fft vector is empty!");
         }
 
         if(!is_smooth(input.size())){
-            cout << "size is not 5 smooth" << endl;
-            return {};
+            throw std::invalid_argument("fft: fft vector size is not 5 smooth: " + std::to_string(input.size()));
         }
 
         if(input.size() <= 1) return input;
@@ -78,10 +76,11 @@ public:
 
 
     std::vector<samples> ifft(const std::vector<samples>& input){
-        if(input.empty()) return {};
+        if(input.empty()){
+            throw std::invalid_argument("ifft: ifft vector is empty!");
+        };
         if(!is_smooth(input.size())){
-            cout << "size is not 5 smooth" << endl;
-            return {};
+            throw std::invalid_argument("fft: fft vector size is not 5 smooth: " + std::to_string(input.size()));
         }
 
         auto result = ifft_recursive(input);
@@ -322,39 +321,47 @@ private:
 
 
 int main(){
-    std::random_device rd;
-    std::mt19937 generator(rd());
-    size_t size = 60;
-    std::uniform_real_distribution<float> distr (-100.0f, 100.0f);
-    std::vector<samples> input(size);
-    for(size_t i = 0; i < input.size(); ++i){
-        float real = distr(generator);
-        float imag = distr(generator);
-        input[i] = samples(real, imag);
-    }
+    try{
+        std::random_device rd;
+        std::mt19937 generator(rd());
+        size_t size = 60;
+        std::uniform_real_distribution<float> distr (-100.0f, 100.0f);
+        std::vector<samples> input(size);
+        for(size_t i = 0; i < input.size(); ++i){
+            float real = distr(generator);
+            float imag = distr(generator);
+            input[i] = samples(real, imag);
+        }
 
-    for(size_t i = 0; i < 10; i++){
-        cout << input[i].real() << " " << input[i].imag() << endl;
-    }
-    cout<<endl;
-    cout<<"Test"<<endl;
+        for(size_t i = 0; i < 10; i++){
+            cout << input[i].real() << " " << input[i].imag() << endl;
+        }
+        cout<<endl;
+        cout<<"Test FFT"<<endl;
 
-    fastFourier ff(input);
-    auto result = ff.fft(input);
-    for(size_t i = 0; i < 15; ++i){
-        cout << result[i] << endl;
+        fastFourier ff(input);
+        auto result = ff.fft(input);
+        for(size_t i = 0; i < 15; ++i){
+            cout << result[i] << endl;
+        }
+        cout << endl;
+        cout << "Test Inv FFT" << endl;
+        auto inv_res = ff.ifft(result);
+        for(auto& el: inv_res){
+            cout << el << endl;
+        }
+        float error = 0.0f;
+        for(size_t i = 0; i < size; ++i){
+            error += std::abs(input[i] - inv_res[i]);
+        }
+        cout << endl;
+        cout << "Error: " << error << endl;
     }
-    cout << endl;
-    cout << "Test Inv" << endl;
-    auto inv_res = ff.ifft(result);
-    for(auto& el: inv_res){
-        cout << el << endl;
+    catch(const std::invalid_argument& e){
+        cout << "Error: " << e.what() << endl; 
     }
-    float error = 0.0f;
-    for(size_t i = 0; i < size; ++i){
-        error += std::abs(input[i] - inv_res[i]);
+    catch(const std::exception& e){
+        cout << "Not expected error: " << e.what() << endl;
     }
-    cout << endl;
-    cout << "Error: " << error << endl;
     return 0;
 }
