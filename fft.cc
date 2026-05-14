@@ -4,7 +4,7 @@
 #include <complex> 
 #include <cmath>
 #include <random>
-#include <exception>
+#include <stdexcept>
 
 using samples = std::complex<float>;
 using samplesBuff = std::vector<samples>;
